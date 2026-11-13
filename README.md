@@ -1,88 +1,47 @@
-# 🛡️ TryHackMe | ICE 
+# 🧊 TryHackMe — Ice
 
+![TryHackMe](https://img.shields.io/badge/TryHackMe-212C42?style=for-the-badge&logo=tryhackme&logoColor=red)
+![Windows](https://img.shields.io/badge/Target-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Difficulty](https://img.shields.io/badge/Difficulty-Medium-orange?style=for-the-badge)
 
-> An isolated virtual lab for practicing ethical hacking, network scanning and vulnerability assessment.
+> Write-up for the [Ice](https://tryhackme.com/room/ice) room on TryHackMe — a Windows machine focused on service enumeration and exploitation.
 
 ---
 
 ## 📌 Table of Contents
-- [Project Overview](#-project-overview)
+- [Room Info](#-room-info)
 - [Objectives](#-objectives)
-- [Lab Architecture](#-lab-architecture)
-- [Requirements](#-requirements)
-- [Setup Guide](#-setup-guide)
 - [Tools Used](#-tools-used)
 - [Walkthrough](#-walkthrough)
+  - [1. Reconnaissance](#1-reconnaissance)
+  - [2. Enumeration](#2-enumeration)
+  - [3. Exploitation](#3-exploitation)
+  - [4. Privilege Escalation](#4-privilege-escalation)
+  - [5. Flags](#5-flags)
 - [Key Learnings](#-key-learnings)
 - [Disclaimer](#-disclaimer)
 - [Author](#-author)
 
 ---
 
-## 📖 Project Overview
+## 📖 Room Info
 
-This project documents the cybersecurity lab I built using **Kali Linux** (attacker machine) and **VirtualBox** (virtualization platform). The lab runs on an isolated network so I can safely practice penetration testing techniques on intentionally vulnerable machines.
+| | |
+|---|---|
+| **Room name** | Ice |
+| **Platform** | TryHackMe |
+| **Target OS** | Windows |
+| **Attacker machine** | Kali Linux |
+| **Status** | ✅ Completed |
 
 ---
 
 ## 🎯 Objectives
 
-- Build a safe, isolated environment for ethical hacking practice
-- Learn the penetration testing workflow: recon → scanning → exploitation → reporting
-- Get hands-on with industry-standard tools
-- Document my work as a cybersecurity portfolio
-
----
-
-## 🏗️ Lab Architecture
-
-| Machine | Role | OS | RAM | IP Address |
-|---------|------|----|-----|------------|
-| Kali Linux | Attacker | Kali Linux | 4 GB | 192.168.56.101 |
-| Target VM | Victim | (e.g. Metasploitable 2) | 1 GB | 192.168.56.102 |
-
-**Network type:** Host-Only / NAT Network (isolated from the home network)
-
-```
-+----------------+        Host-Only Network        +------------------+
-|  Kali Linux    | <-----------------------------> |   Target VM      |
-|  (Attacker)    |        192.168.56.0/24          |   (Vulnerable)   |
-+----------------+                                 +------------------+
-```
-
-> 🔧 Replace the machines and IPs above with your own.
-
----
-
-## 💻 Requirements
-
-- Host PC with at least 8 GB RAM (16 GB recommended)
-- 50+ GB free disk space
-- Virtualization (VT-x / AMD-V) enabled in BIOS
-- [VirtualBox](https://www.virtualbox.org/) and Extension Pack
-- [Kali Linux image](https://www.kali.org/get-kali/)
-
----
-
-## ⚙️ Setup Guide
-
-1. Install VirtualBox on the host machine.
-2. Download and import the Kali Linux VirtualBox image.
-3. Create a Host-Only or NAT Network in `File → Tools → Network Manager`.
-4. Import the target VM and attach it to the same network.
-5. Start both VMs and check connectivity:
-
-```bash
-ip a
-ping -c 4 <target-ip>
-nmap -sn 192.168.56.0/24
-```
-
-6. Take a **snapshot** of each VM in a clean state.
-
-📷 *Screenshot of final setup:*
-
-![Lab Setup](screenshots/lab-setup.png)
+- Enumerate services running on a Windows target
+- Identify and exploit a vulnerable service
+- Escalate privileges to gain full system access
+- Capture the user and root (system) flags
 
 ---
 
@@ -90,63 +49,103 @@ nmap -sn 192.168.56.0/24
 
 | Category | Tools |
 |----------|-------|
-| Reconnaissance | Nmap, Netdiscover |
-| Vulnerability Scanning | Nikto, OpenVAS |
-| Exploitation | Metasploit, SQLmap |
-| Web Testing | Burp Suite, Gobuster |
-| Password Attacks | John the Ripper, Hydra |
-| Traffic Analysis | Wireshark |
+| Scanning | Nmap |
+| Enumeration | smbclient, enum4linux, CrackMapExec |
+| Exploitation | Metasploit |
+| Privilege Escalation | winPEAS |
 
 ---
 
 ## 🔍 Walkthrough
 
-### Step 1: Network Discovery
-Found live hosts on the lab network.
+### 1. Reconnaissance
+
+Initial port scan of the target:
 
 ```bash
-nmap -sn 192.168.56.0/24
+nmap -sV -sC -p- -oN nmap-initial.txt <target-ip>
 ```
-![Step 1](screenshots/step1.png)
 
-### Step 2: Port & Service Scan
-Identified open ports and service versions on the target.
+**Findings:**
+- *(List open ports and services here, e.g. 135, 139, 445, 8000)*
+
+![Nmap Scan](screenshots/01-nmap.png)
+
+---
+
+### 2. Enumeration
+
+*(Describe the service you dug into — SMB shares, a web service on a custom port, etc.)*
 
 ```bash
-nmap -sV -sC -p- 192.168.56.102
+smbclient -L //<target-ip>/ -N
 ```
-![Step 2](screenshots/step2.png)
 
-### Step 3: Vulnerability Identification
-*(Describe what you found, e.g. outdated FTP service.)*
+**Findings:**
+- *(What you discovered — e.g. accessible share, interesting file, service version)*
 
-### Step 4: Exploitation
-*(Describe the exploit and tool used, with a screenshot.)*
+![Enumeration](screenshots/02-enum.png)
 
-### Step 5: Findings & Mitigation
-*(What was vulnerable, and how it can be fixed or hardened.)*
+---
+
+### 3. Exploitation
+
+*(Name the vulnerability/service you exploited and why it's vulnerable.)*
+
+```bash
+msfconsole -q
+use exploit/<path/to/module>
+set RHOSTS <target-ip>
+set LHOST <your-ip>
+run
+```
+
+**Result:**
+- *(Shell obtained, user context, etc.)*
+
+![Exploitation](screenshots/03-exploit.png)
+
+---
+
+### 4. Privilege Escalation
+
+*(Describe the misconfiguration or vulnerability used to escalate — e.g. weak service permissions, scheduled task, token privilege.)*
+
+```bash
+# Example: upload and run winPEAS
+.\winPEASx64.exe
+```
+
+**Result:**
+- *(How you obtained SYSTEM/admin access)*
+
+![PrivEsc](screenshots/04-privesc.png)
+
+---
+
+### 5. Flags
+
+| Flag | Value |
+|------|-------|
+| User flag | `THM{xxxxxxxxxxxxxxxx}` |
+| Root flag | `THM{xxxxxxxxxxxxxxxx}` |
 
 ---
 
 ## 📚 Key Learnings
 
-- How to build and isolate a safe virtual lab
-- How scanning reveals attack surface
-- Why patching and hardening matter
-- How to document findings clearly
+- *(e.g. How to enumerate SMB shares on Windows targets)*
+- *(e.g. Importance of checking for outdated/vulnerable third-party software)*
+- *(e.g. How misconfigured service permissions lead to privilege escalation)*
 
 ---
 
-## ⚠️ Disclaimer
 
-This project is for **educational purposes only**. All testing was done in my own isolated lab on machines I own. Never test systems without explicit permission. Unauthorized access is illegal.
-
----
 
 ## 👤 Author
 
 **Your Name**
+- TryHackMe: [your-profile](https://tryhackme.com/p/your-profile)
 - GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-profile](https://linkedin.com/in/your-profile)
 
 ⭐ Star this repo if you found it helpful!
